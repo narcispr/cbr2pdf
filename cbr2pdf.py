@@ -8,12 +8,6 @@ import argparse
 from tqdm import tqdm
 
 
-def get_files(path='.'):
-    "Get all files in given folder"
-    os.chdir(path)
-    return [f for f in os.listdir() if os.path.isfile(f)]
-
-
 def correction(f, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,0,0,0)):
     "Given a file, open it with PIL and apply a brightness and contrast filter and save it as a new file"
     im = Image.open(f)
@@ -30,15 +24,16 @@ def correction(f, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,
         im = enhancer.enhance(brightness)
 
     if resize is not None:
-        im = im.resize((resize[0], resize[1]), Image.Resampling.BICUBIC)
-    im.save(os.path.join("tmp/" + f))
+        im = im.resize((resize[0], resize[1]), Image.BICUBIC)
+    
+    return im
 
 
 def jpg_to_pdf(files, output="output.pdf"):
     "Given a list of files, create a pdf with them"
     pdf = FPDF()
     print("Creating pdf...")
-    os.chdir("tmp")
+    
     for f in tqdm(files):
         # print progress bar with i out of len(files)
         pdf.add_page()
@@ -48,9 +43,7 @@ def jpg_to_pdf(files, output="output.pdf"):
 
 def cbr2pdf(path, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,0,0,0), output="output.pdf"):
     "Given a folder with image files, process them and convert them to pdf"
-    # get current folder
-    current_path = os.getcwd()
-
+    
     # print("current path: ", current_path)
     # print("path: ", path)
     # print("output: ", output)
@@ -60,7 +53,15 @@ def cbr2pdf(path, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,
     # print("resize: ", resize)
     # print("crop: ", crop)
 
-    files = get_files(path)
+    # get current folder
+    current_path = os.getcwd()
+    
+    # move to working folder
+    os.chdir(path)
+
+    # Get all files in given folder
+    files = [f for f in os.listdir() if os.path.isfile(f)]
+
     print("Processing files...")
     # create tmp folder
     try:
@@ -68,10 +69,16 @@ def cbr2pdf(path, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,
     except FileExistsError:
         pass
     for f in tqdm(files):
-        correction(f, bw=bw, contrast=contrast, brightness=brightness, resize=resize, crop=crop)
+        im = correction(f, bw=bw, contrast=contrast, brightness=brightness, resize=resize, crop=crop)
+        im.save(os.path.join("tmp/" + f))
+
+    # move to tmp folder
+    os.chdir("tmp")
+
+    # create PDF wth files in tmp folder
     jpg_to_pdf(files, os.path.join(current_path, output))
 
-    # remove folder and its content files
+    # remove files in tmp folder and tmp folder
     for f in files:
         os.remove(f)
     os.chdir("..")

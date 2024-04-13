@@ -32,7 +32,7 @@ usage: cbr2pdf.py [-h] [--path PATH] [--bw BW]
 Example:
 
 ```bash
-python.exe .\cbr2pdf.py --path '..\Dragon Ball\Dragon Ball 1' --bw True --contrast True --brightness 1.2 --width 1072 --height 1448 --crop_bottom 20 --output dragon_ball_01.pdf
+python cbr2pdf.py --path '..\Dragon Ball\Dragon Ball 1' --bw True --contrast True --brightness 1.2 --width 1072 --height 1448 --crop_bottom 20 --output dragon_ball_01.pdf
 ```
 
 Set width and height to the screen size of your device. 
