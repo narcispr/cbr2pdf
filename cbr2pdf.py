@@ -41,6 +41,29 @@ def jpg_to_pdf(files, output="output.pdf"):
     print("Saving pdf...")
     pdf.output(output)
 
+def cbr2folder(path):
+    "Given a cbr file, extract it to a folder"
+    # create tmp folder and mode file in path to it
+    try:
+        os.mkdir("tmp")
+    except FileExistsError:
+        pass
+    os.chdir("tmp")
+    # copy file to tmp folder
+    os.system("cp ../" + path + " .")
+    
+    # get file name in path string
+    file_name = path.split("/")[-1]
+    os.system("unzip " + file_name)
+    # count number of files in folder if files less than 3, uncompress using unrar
+    files = [f for f in os.listdir() if os.path.isfile(f)]
+    if len(files) < 3:
+        os.system("unrar x " + file_name)
+    os.remove(file_name)
+    # get current path
+    current_path = os.getcwd()
+    return current_path
+
 def cbr2pdf(path, bw=False, contrast=True, brightness=1.0, resize=None, crop=(0,0,0,0), output="output.pdf"):
     "Given a folder with image files, process them and convert them to pdf"
     
@@ -104,7 +127,19 @@ if __name__ == "__main__":
     else:
         resize = None
  
+    remove = False
+    # if args.path is a cbr file, extract it to a folder
+    if args.path.split(".")[-1] == "cbr":
+        args.path = cbr2folder(args.path)
+        remove = True
     cbr2pdf(args.path, resize=resize, bw=(args.bw=="True"), contrast=(args.contrast=="True"), brightness=args.brightness, 
             crop = (args.crop_left, args.crop_top, args.crop_right, args.crop_bottom), output=args.output)
 
-
+    if remove:
+        print("Removing images extracted from CBR...")
+        # move *.pdf file to the original folder
+        os.system("mv *.pdf ../")
+        # remove files in tmp folder and tmp folder
+        os.system("rm *")
+        os.chdir("..")
+        os.rmdir("tmp")
